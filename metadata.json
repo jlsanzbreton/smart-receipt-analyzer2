@@ -1,0 +1,8 @@
+{
+  "name": "Smart Receipt Analyzer",
+  "description": "An intelligent PWA to manage your monthly card expenses by scanning receipts, categorizing spending, and providing savings insights using Gemini API.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "prompt": ""
+}
