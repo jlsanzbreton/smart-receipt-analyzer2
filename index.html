@@ -27,12 +27,12 @@
     <meta name="apple-touch-fullscreen" content="yes" />
     <link
       rel="mask-icon"
-      href="/smart-receipt-analyzer2/icons/icon-192x192.png"
+      href="/smart-receipt-analyzer2/icons/icon-192x192.svg"
       color="#0D9488"
     />
     <link
       rel="apple-touch-icon"
-      href="/smart-receipt-analyzer2/icons/icon-192x192.png"
+      href="/smart-receipt-analyzer2/icons/icon-192x192.svg"
     />
     <!-- Splash screens para iPhone -->
     <link
@@ -92,26 +92,39 @@
     <script type="module" src="./index.tsx"></script>
     <script>
       if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          // Adaptación para GitHub Pages
-          const swLocation =
-            window.location.hostname === "localhost"
-              ? "/sw.js"
-              : "/smart-receipt-analyzer2/sw.js";
-          
-          console.log("Intentando registrar Service Worker en: " + swLocation);
-          
-          navigator.serviceWorker
-            .register(swLocation)
-            .then((registration) => {
-              console.log(
-                "ServiceWorker registration successful with scope: ",
-                registration.scope
-              );
-            })
-            .catch((error) => {
-              console.log("ServiceWorker registration failed: ", error);
-            });
+        window.addEventListener("load", async () => {
+          try {
+            // Adaptación para GitHub Pages
+            const swLocation =
+              window.location.hostname === "localhost"
+                ? "/sw.js"
+                : "/smart-receipt-analyzer2/sw.js";
+            
+            console.log("Intentando registrar Service Worker en: " + swLocation);
+            
+            const registration = await            registration.onupdatefound = () => {
+              const installingWorker = registration.installing;
+              if (installingWorker == null) {
+                return;
+              }
+              installingWorker.onstatechange = () => {
+                if (installingWorker.state === 'installed') {
+                  if (navigator.serviceWorker.controller) {
+                    console.log('Nueva actualización disponible. Recarga para actualizar.');
+                  } else {
+                    console.log('Contenido almacenado para uso offline.');
+                  }
+                }
+              };
+            };
+            
+            console.log(
+              "ServiceWorker registrado correctamente con scope: ",
+              registration.scope
+            );
+          } catch (error) {
+            console.error("Error al registrar el service worker:", error);
+          }
         });
       }
     </script>
