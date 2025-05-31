@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Verificación de PWA</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        line-height: 1.6;
+      }
+      h1 {
+        color: #0d9488;
+      }
+      .status {
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 5px;
+      }
+      .success {
+        background-color: #d4edda;
+        color: #155724;
+      }
+      .error {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+      button {
+        background-color: #0d9488;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-top: 10px;
+      }
+      code {
+        background-color: #f4f4f4;
+        padding: 2px 5px;
+        border-radius: 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Verificación de PWA Smart Receipt Analyzer</h1>
+
+    <div id="status-container">
+      <h2>Estado de la PWA</h2>
+      <div id="pwa-status" class="status">Verificando...</div>
+
+      <h2>Service Worker</h2>
+      <div id="sw-status" class="status">Verificando...</div>
+
+      <h2>API Key</h2>
+      <div id="api-status" class="status">Verificando...</div>
+    </div>
+
+    <button id="install-button" style="display: none">
+      Instalar como aplicación
+    </button>
+
+    <h2>Instrucciones para instalar en iOS:</h2>
+    <ol>
+      <li>Abra esta página en Safari</li>
+      <li>
+        Toque el botón "Compartir" <code>📤</code> en la parte inferior de la
+        pantalla
+      </li>
+      <li>Desplácese hacia abajo y toque "Añadir a la pantalla de inicio"</li>
+      <li>Confirme tocando "Añadir" en la parte superior derecha</li>
+    </ol>
+
+    <script>
+      // Verificar si estamos ejecutando como PWA
+      const isPWA =
+        window.matchMedia("(display-mode: standalone)").matches ||
+        window.navigator.standalone ||
+        document.referrer.includes("android-app://");
+
+      const pwaStatus = document.getElementById("pwa-status");
+      const swStatus = document.getElementById("sw-status");
+      const apiStatus = document.getElementById("api-status");
+      const installButton = document.getElementById("install-button");
+
+      // Verificar estado de PWA
+      if (isPWA) {
+        pwaStatus.textContent = "✅ La aplicación se está ejecutando como PWA";
+        pwaStatus.className = "status success";
+      } else {
+        pwaStatus.textContent =
+          "❌ La aplicación NO se está ejecutando como PWA";
+        pwaStatus.className = "status error";
+      }
+
+      // Verificar Service Worker
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker
+          .getRegistration()
+          .then((registration) => {
+            if (registration) {
+              swStatus.textContent = `✅ Service Worker registrado con éxito. Scope: ${registration.scope}`;
+              swStatus.className = "status success";
+            } else {
+              swStatus.textContent = "❌ No hay Service Worker registrado";
+              swStatus.className = "status error";
+            }
+          })
+          .catch((error) => {
+            swStatus.textContent = `❌ Error al verificar Service Worker: ${error}`;
+            swStatus.className = "status error";
+          });
+      } else {
+        swStatus.textContent =
+          "❌ Service Worker no soportado en este navegador";
+        swStatus.className = "status error";
+      }
+
+      // Verificar API Key
+      fetch("./api-check")
+        .then((response) => {
+          if (response.ok) {
+            apiStatus.textContent = "✅ API Key configurada correctamente";
+            apiStatus.className = "status success";
+          } else {
+            apiStatus.textContent = "❌ API Key no configurada o inválida";
+            apiStatus.className = "status error";
+          }
+        })
+        .catch((error) => {
+          if (typeof process !== "undefined" && process.env.GEMINI_API_KEY) {
+            apiStatus.textContent =
+              "✅ API Key detectada en variables de entorno";
+            apiStatus.className = "status success";
+          } else {
+            apiStatus.textContent = "❌ No se pudo verificar la API Key";
+            apiStatus.className = "status error";
+          }
+        });
+
+      // Lógica para instalar PWA
+      let deferredPrompt;
+
+      window.addEventListener("beforeinstallprompt", (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        installButton.style.display = "block";
+      });
+
+      installButton.addEventListener("click", async () => {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          console.log(`User response to the install prompt: ${outcome}`);
+          deferredPrompt = null;
+          installButton.style.display = "none";
+        }
+      });
+    </script>
+  </body>
+</html>

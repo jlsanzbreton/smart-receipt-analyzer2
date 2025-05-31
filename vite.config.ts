@@ -11,24 +11,34 @@ export default defineConfig(({ mode }) => {
       react(),
       VitePWA({
         registerType: "autoUpdate",
-        includeAssets: ["**/*"],
+        workbox: {
+          globPatterns: [
+            "**/*.{js,css,html,ico,png,svg,jpg,jpeg,gif,webp,woff,woff2,ttf,eot}",
+          ],
+        },
+        includeAssets: ["favicon.ico", "apple-touch-icon.png", "mask-icon.svg"],
         manifest: {
           name: "Smart Receipt Analyzer",
           short_name: "Receipt Analyzer",
           description: "Analyze and track your receipts for savings insights",
           theme_color: "#ffffff",
+          background_color: "#ffffff",
+          display: "standalone",
+          orientation: "portrait",
+          scope: "/smart-receipt-analyzer2/",
+          start_url: "/smart-receipt-analyzer2/",
           icons: [
             {
               src: "/smart-receipt-analyzer2/icons/icon-192x192.svg",
               sizes: "192x192",
               type: "image/svg+xml",
-              purpose: "any maskable"
+              purpose: "any maskable",
             },
             {
               src: "/smart-receipt-analyzer2/icons/icon-512x512.svg",
               sizes: "512x512",
               type: "image/svg+xml",
-              purpose: "any maskable"
+              purpose: "any maskable",
             },
           ],
         },
@@ -44,6 +54,9 @@ export default defineConfig(({ mode }) => {
       },
     },
     build: {
+      outDir: "dist",
+      assetsDir: "assets",
+      sourcemap: false,
       rollupOptions: {
         output: {
           manualChunks: {
