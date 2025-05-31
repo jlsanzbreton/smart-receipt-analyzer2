@@ -43,6 +43,10 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: "./dist"
+      - name: Debug build output
+        run: |
+          echo "Contenido del directorio dist:"
+          ls -la ./dist
 
   deploy:
     environment:
