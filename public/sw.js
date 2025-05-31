@@ -1,20 +1,16 @@
-const C  // Add paths to your main JS/CSS bundles if they are static and known
-  // For this setup, esm.sh/* handles react, heroicons etc.
-  "/smart-receipt-analyzer2/manifest.json",
-  "/smart-receipt-analyzer2/icons/icon-192x192.svg",
-  "/smart-receipt-analyzer2/icons/icon-512x512.svg",
-  DEXIE_CDN_URL // Cache DexieAME = "smart-receipt-analyzer-v2"; // Incremented cache version
+const CACHE_NAME = "smart-receipt-analyzer-v2"; // Incremented cache version
 const DEXIE_CDN_URL = "https://esm.sh/dexie@^4.0.7"; // Matches importmap
 
 const APP_SHELL_FILES = [
   "/smart-receipt-analyzer2/",
   "/smart-receipt-analyzer2/index.html",
+  "/smart-receipt-analyzer2/pwa-check.html",
   // '/index.tsx', // We cache the page that loads it, not the .tsx itself
   // Add paths to your main JS/CSS bundles if they are static and known
   // For this setup, esm.sh/* handles react, heroicons etc.
   "/smart-receipt-analyzer2/manifest.json",
-  "/smart-receipt-analyzer2/icons/icon-192x192.png",
-  "/smart-receipt-analyzer2/icons/icon-512x512.png",
+  "/smart-receipt-analyzer2/icons/icon-192x192.svg",
+  "/smart-receipt-analyzer2/icons/icon-512x512.svg",
   DEXIE_CDN_URL, // Cache Dexie
 ];
 
