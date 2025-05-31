@@ -11,7 +11,8 @@
     {
       "src": "/smart-receipt-analyzer2/icons/icon-512x512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
   ],
   "start_url": "/smart-receipt-analyzer2/",
