@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write # Aumentado a write para poder crear la rama gh-pages si es necesario
+  contents: write # Aumentado a write para asegurar que se pueda crear la rama gh-pages si es necesario
   pages: write
   id-token: write
 
@@ -15,21 +15,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Eliminamos el job build separado y lo combinamos con el de despliegue
-
-  # Un solo job para todo el proceso de build y despliegue
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
       - name: Set up Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "npm"
+
       - name: Install dependencies
         run: npm ci
+
       - name: Create .env.production file with API key
         run: |
           if [ -z "${{ secrets.GEMINI_API_KEY }}" ]; then
@@ -38,29 +38,54 @@ jobs:
             exit 1
           fi
           echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" > .env.production
+
       - name: Build
         run: npm run build
-      - name: Debug build output
+
+      - name: Add .nojekyll file
+        run: touch ./dist/.nojekyll
+        
+      - name: Verificar archivos PWA
+        run: |
+          echo "Verificando archivos PWA generados..."
+          
+          # Comprobar archivos esenciales de PWA
+          for file in manifest.webmanifest sw.js; do
+            if [ -f "./dist/$file" ]; then
+              echo "✅ $file encontrado"
+            else
+              echo "⚠️ $file no encontrado"
+            fi
+          done
+          
+          # Verificar iconos SVG
+          if [ -d "./dist/icons" ] || [ -d "./dist/assets/icons" ]; then
+            echo "✅ Directorio de iconos encontrado"
+            ls -la ./dist/icons || ls -la ./dist/assets/icons
+          else
+            echo "⚠️ Directorio de iconos no encontrado. Copiando iconos manualmente..."
+            mkdir -p ./dist/icons
+            cp -r ./public/icons/*.svg ./dist/icons/
+          fi
+
+      # Verificar estructura del directorio dist
+      - name: Verificar estructura del directorio dist
         run: |
           echo "Contenido del directorio dist:"
           ls -la ./dist
+          echo "Tamaño del directorio dist:"
+          du -sh ./dist
       
-      # Despliegue directo a la rama gh-pages
-      - name: Deploy to GitHub Pages (gh-pages)
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          folder: dist # La carpeta que contiene los archivos construidos
-          branch: gh-pages # La rama donde se despliega el sitio
-
-      # Configuración para GitHub Pages nativo
       - name: Setup Pages
-        uses: actions/configure-pages@v3
+        uses: actions/configure-pages@v4
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: "./dist"
+
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v3
-        with:
-          token: ${{ github.token }}
+        uses: actions/deploy-pages@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
