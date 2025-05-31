@@ -1,0 +1,24 @@
+{
+  "short_name": "Receipts",
+  "name": "Smart Receipt Analyzer",
+  "icons": [
+    {
+      "src": "/smart-receipt-analyzer2/icons/icon-192x192.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/smart-receipt-analyzer2/icons/icon-512x512.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/smart-receipt-analyzer2/",
+  "background_color": "#1E293B",
+  "display": "standalone",
+  "scope": "/smart-receipt-analyzer2/",
+  "theme_color": "#0D9488",
+  "description": "An intelligent PWA to manage your monthly card expenses by scanning receipts."
+}
