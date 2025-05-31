@@ -5,9 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Smart Receipt Analyzer</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="manifest" href="/manifest.json" />
+    <link rel="manifest" href="/smart-receipt-analyzer2/manifest.json" />
     <meta name="theme-color" content="#0D9488" />
-    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+    <!-- Browser-specific theme color support -->
+    <meta name="msapplication-navbutton-color" content="#0D9488" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="#0D9488" />
+    <link
+      rel="mask-icon"
+      href="/smart-receipt-analyzer2/icons/icon-192x192.png"
+      color="#0D9488"
+    />
+    <link
+      rel="apple-touch-icon"
+      href="/smart-receipt-analyzer2/icons/icon-192x192.png"
+    />
     <style>
       body {
         font-family: "Inter", sans-serif;
@@ -35,7 +47,12 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
-    <script type="importmap">
+    <!-- Importmap polyfill for Safari on iOS < 16.4 -->
+    <script
+      async
+      src="https://ga.jspm.io/npm:es-module-shims@1.8.3/dist/es-module-shims.js"
+    ></script>
+    <script type="esms-importmap">
       {
         "imports": {
           "react/": "https://esm.sh/react@^19.1.0/",
@@ -52,12 +69,18 @@
   <body class="bg-slate-100">
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
+    <script type="module" src="./index.tsx"></script>
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
+          // Adaptación para GitHub Pages
+          const swLocation =
+            window.location.hostname === "localhost"
+              ? "/sw.js"
+              : "/smart-receipt-analyzer2/sw.js";
+
           navigator.serviceWorker
-            .register("/sw.js")
+            .register(swLocation)
             .then((registration) => {
               console.log(
                 "ServiceWorker registration successful with scope: ",
@@ -72,5 +95,3 @@
     </script>
   </body>
 </html>
-<link rel="stylesheet" href="index.css" />
-<script src="index.tsx" type="module"></script>
