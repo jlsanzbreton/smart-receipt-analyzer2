@@ -29,22 +29,26 @@ Una aplicación web progresiva (PWA) que analiza tus recibos para proporcionar i
 ## Instalación y uso
 
 1. Clona este repositorio:
+
    ```bash
    git clone https://github.com/tuusuario/smart-receipt-analyzer.git
    cd smart-receipt-analyzer
    ```
 
 2. Instala las dependencias:
+
    ```bash
    npm install
    ```
 
 3. Crea un archivo `.env.local` con tu API key de Google Gemini:
+
    ```
    GEMINI_API_KEY=tu_api_key_aquí
    ```
 
 4. Inicia el servidor de desarrollo:
+
    ```bash
    npm run dev
    ```

@@ -1,4 +1,3 @@
-
 {
   "short_name": "Receipts",
   "name": "Smart Receipt Analyzer",
@@ -16,7 +15,7 @@
     }
   ],
   "start_url": "/",
-  "background_color": "#1E293B", 
+  "background_color": "#1E293B",
   "display": "standalone",
   "scope": "/",
   "theme_color": "#0D9488",

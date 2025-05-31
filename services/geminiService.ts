@@ -1,25 +1,39 @@
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
-import type { ReceiptData, Category, CategorizedExpense, SavingsInsight, GeminiReceiptResponse, SavingsInsightItem, ReceiptItem } from '../types';
-import { GEMINI_TEXT_MODEL, DEFAULT_CATEGORIES } from '../constants';
+import type {
+  ReceiptData,
+  Category,
+  CategorizedExpense,
+  SavingsInsight,
+  GeminiReceiptResponse,
+  SavingsInsightItem,
+  ReceiptItem,
+} from "../types";
+import { GEMINI_TEXT_MODEL, DEFAULT_CATEGORIES } from "../constants";
 
 const API_KEY = process.env.API_KEY;
 
 if (!API_KEY) {
-  console.error("API_KEY for Gemini is not set. Please ensure process.env.API_KEY is available.");
+  console.error(
+    "API_KEY for Gemini is not set. Please ensure process.env.API_KEY is available."
+  );
   // In a real app, you might want to prevent API calls or show a persistent error to the user.
 }
-const ai = new GoogleGenAI({ apiKey: API_KEY || "FALLBACK_API_KEY_MUST_BE_REPLACED" });
+const ai = new GoogleGenAI({
+  apiKey: API_KEY || "FALLBACK_API_KEY_MUST_BE_REPLACED",
+});
 
 if (!API_KEY) {
-    // This console log might appear if the app somehow continues with a dummy key.
-    console.error("Gemini API Key is missing. The application's AI features will not function correctly.");
+  // This console log might appear if the app somehow continues with a dummy key.
+  console.error(
+    "Gemini API Key is missing. The application's AI features will not function correctly."
+  );
 }
 
 const MAX_RETRIES = 2; // Initial attempt + 2 retries = 3 total attempts
 const RETRY_DELAY_MS = 1000;
 
 async function delay(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function withRetries<T>(
@@ -33,14 +47,24 @@ async function withRetries<T>(
     } catch (error) {
       attempts++;
       if (attempts > MAX_RETRIES) {
-        console.error(`${operationName} failed after ${attempts} attempts.`, error);
+        console.error(
+          `${operationName} failed after ${attempts} attempts.`,
+          error
+        );
         if (error instanceof Error) {
-            throw new Error(`AI operation '${operationName}' failed after multiple retries: ${error.message}`);
+          throw new Error(
+            `AI operation '${operationName}' failed after multiple retries: ${error.message}`
+          );
         } else {
-            throw new Error(`AI operation '${operationName}' failed after multiple retries with an unknown error type.`);
+          throw new Error(
+            `AI operation '${operationName}' failed after multiple retries with an unknown error type.`
+          );
         }
       }
-      console.warn(`${operationName} attempt ${attempts} failed. Retrying in ${RETRY_DELAY_MS}ms...`, error);
+      console.warn(
+        `${operationName} attempt ${attempts} failed. Retrying in ${RETRY_DELAY_MS}ms...`,
+        error
+      );
       await delay(RETRY_DELAY_MS);
     }
   }
@@ -58,7 +82,12 @@ function parseJsonFromGeminiResponse(text: string): any {
   } catch (e) {
     console.error("Failed to parse JSON response from AI.", e);
     console.error("Raw AI text response:", text);
-    throw new Error(`Failed to parse JSON response from AI. Preview: "${text.substring(0, 200)}..."`);
+    throw new Error(
+      `Failed to parse JSON response from AI. Preview: "${text.substring(
+        0,
+        200
+      )}..."`
+    );
   }
 }
 
@@ -66,16 +95,18 @@ const safeParseFloat = (value: any, defaultValue: number = 0): number => {
   if (value === null || value === undefined) return defaultValue;
   const stringValue = String(value).trim();
   if (stringValue === "") return defaultValue;
-  
+
   const num = parseFloat(stringValue);
   return isNaN(num) ? defaultValue : num;
 };
 
-export const analyzeReceipt = async (imageDataBase64: string): Promise<ReceiptData> => {
+export const analyzeReceipt = async (
+  imageDataBase64: string
+): Promise<ReceiptData> => {
   return withRetries(async () => {
     const imagePart = {
       inlineData: {
-        mimeType: 'image/jpeg', // Consider making this dynamic if other types are common
+        mimeType: "image/jpeg", // Consider making this dynamic if other types are common
         data: imageDataBase64,
       },
     };
@@ -117,83 +148,121 @@ export const analyzeReceipt = async (imageDataBase64: string): Promise<ReceiptDa
       contents: { parts: [imagePart, textPart] },
       config: {
         responseMimeType: "application/json",
-        thinkingConfig: { thinkingBudget: 0 } // For gemini-2.5-flash-preview-04-17
+        thinkingConfig: { thinkingBudget: 0 }, // For gemini-2.5-flash-preview-04-17
       },
     });
 
-    const parsed = parseJsonFromGeminiResponse(response.text) as GeminiReceiptResponse;
+    const parsed = parseJsonFromGeminiResponse(
+      response.text ?? ""
+    ) as GeminiReceiptResponse;
 
     if (!parsed.totalAmount || !parsed.vendorName || !parsed.transactionDate) {
       console.error("Critical data missing from AI response:", parsed);
-      throw new Error('AI response missing one or more critical fields: totalAmount, vendorName, or transactionDate.');
+      throw new Error(
+        "AI response missing one or more critical fields: totalAmount, vendorName, or transactionDate."
+      );
     }
 
     const items: ReceiptItem[] = (parsed.items || []).map((item: any) => ({
-      description: String(item.description || 'Unknown Item'),
+      description: String(item.description || "Unknown Item"),
       quantity: safeParseFloat(item.quantity, 1), // Default quantity to 1
-      unitPrice: item.unitPrice !== undefined ? safeParseFloat(item.unitPrice) : undefined,
+      unitPrice:
+        item.unitPrice !== undefined
+          ? safeParseFloat(item.unitPrice)
+          : undefined,
       totalPrice: safeParseFloat(item.totalPrice),
     }));
-    
+
     // Ensure totalAmount is a number, even if AI sends it as string (safeParseFloat handles this)
     const totalAmount = safeParseFloat(parsed.totalAmount);
-    if (totalAmount === 0 && parsed.totalAmount !== 0 && String(parsed.totalAmount).trim() !== "0") {
-        // This condition tries to catch if totalAmount was non-zero but parsed to 0, indicating a potential issue.
-        // However, a legitimate 0 total is possible. The check above for !parsed.totalAmount is more direct for missing critical data.
-        console.warn("Parsed totalAmount is 0, while original AI response was non-zero or non-empty. Original:", parsed.totalAmount);
+    if (
+      totalAmount === 0 &&
+      parsed.totalAmount !== 0 &&
+      String(parsed.totalAmount).trim() !== "0"
+    ) {
+      // This condition tries to catch if totalAmount was non-zero but parsed to 0, indicating a potential issue.
+      // However, a legitimate 0 total is possible. The check above for !parsed.totalAmount is more direct for missing critical data.
+      console.warn(
+        "Parsed totalAmount is 0, while original AI response was non-zero or non-empty. Original:",
+        parsed.totalAmount
+      );
     }
 
-
     return {
-      vendorName: String(parsed.vendorName || 'Unknown Vendor'),
+      vendorName: String(parsed.vendorName || "Unknown Vendor"),
       transactionDate: String(parsed.transactionDate), // Already validated non-empty
       items: items,
-      subtotal: parsed.subtotal !== undefined ? safeParseFloat(parsed.subtotal) : undefined,
-      taxAmount: parsed.taxAmount !== undefined ? safeParseFloat(parsed.taxAmount) : undefined,
+      subtotal:
+        parsed.subtotal !== undefined
+          ? safeParseFloat(parsed.subtotal)
+          : undefined,
+      taxAmount:
+        parsed.taxAmount !== undefined
+          ? safeParseFloat(parsed.taxAmount)
+          : undefined,
       totalAmount: totalAmount,
-      currency: String(parsed.currency || 'EUR'), // Default to EUR
-      paymentMethod: parsed.paymentMethod ? String(parsed.paymentMethod) : undefined,
+      currency: String(parsed.currency || "EUR"), // Default to EUR
+      paymentMethod: parsed.paymentMethod
+        ? String(parsed.paymentMethod)
+        : undefined,
     };
   }, "Analyze Receipt OCR & Parse");
 };
 
-
-export const classifyExpense = async (vendorName: string, itemDescriptions: string): Promise<Category> => {
- return withRetries(async () => {
-    const categoriesString = DEFAULT_CATEGORIES.join(', ');
-    const prompt = `Given the vendor name "${vendorName}" and item descriptions (e.g., "${itemDescriptions.substring(0,100)}..."), classify this expense into ONE of the following categories: ${categoriesString}.
+export const classifyExpense = async (
+  vendorName: string,
+  itemDescriptions: string
+): Promise<Category> => {
+  return withRetries(async () => {
+    const categoriesString = DEFAULT_CATEGORIES.join(", ");
+    const prompt = `Given the vendor name "${vendorName}" and item descriptions (e.g., "${itemDescriptions.substring(
+      0,
+      100
+    )}..."), classify this expense into ONE of the following categories: ${categoriesString}.
     Return ONLY the category name as a single string from the provided list. For example, if it's for food from a supermarket, return "Groceries". If it's a restaurant meal, return "Dining Out".
     If uncertain, choose the most general applicable category from the list or "Other". Do not invent new categories.
     The response must be exactly one of these category names: ${categoriesString}.`;
-    
+
     const response: GenerateContentResponse = await ai.models.generateContent({
-        model: GEMINI_TEXT_MODEL,
-        contents: prompt,
-        // No specific config like responseMimeType needed, as we expect a simple string.
+      model: GEMINI_TEXT_MODEL,
+      contents: prompt,
+      // No specific config like responseMimeType needed, as we expect a simple string.
     });
 
-    let category = response.text.trim();
+    let category = (response.text ?? "").trim();
 
     // Ensure the response is one of the exact category strings.
     if (!DEFAULT_CATEGORIES.includes(category as Category)) {
-      console.warn(`Gemini returned a category not in the defined list: "${category}". Attempting to find a close match or defaulting to "Other".`);
+      console.warn(
+        `Gemini returned a category not in the defined list: "${category}". Attempting to find a close match or defaulting to "Other".`
+      );
       // Simple fallback, could be improved with fuzzy matching if needed
       const lowerCaseCategory = category.toLowerCase();
-      const matchedCategory = DEFAULT_CATEGORIES.find(c => c.toLowerCase() === lowerCaseCategory);
-      category = matchedCategory || 'Other';
+      const matchedCategory = DEFAULT_CATEGORIES.find(
+        (c) => c.toLowerCase() === lowerCaseCategory
+      );
+      category = matchedCategory || "Other";
     }
     return category as Category;
   }, "Classify Expense Category");
 };
 
-export const getSavingsInsights = async (expenses: CategorizedExpense[]): Promise<SavingsInsight> => {
+export const getSavingsInsights = async (
+  expenses: CategorizedExpense[]
+): Promise<SavingsInsight> => {
   return withRetries(async () => {
-    const categoriesString = DEFAULT_CATEGORIES.join(', ');
+    const categoriesString = DEFAULT_CATEGORIES.join(", ");
     const prompt = `
       Analyze the following expenses (JSON format) and provide savings insights.
       Expenses:
       ${JSON.stringify(expenses.slice(0, 50), null, 2)} 
-      ${expenses.length > 50 ? `\n(...and ${expenses.length - 50} more expenses not shown to save space)` : ''}
+      ${
+        expenses.length > 50
+          ? `\n(...and ${
+              expenses.length - 50
+            } more expenses not shown to save space)`
+          : ""
+      }
 
       Return a JSON object with two keys: "insights" and "overallSummary".
       1. "overallSummary": A brief text (2-4 sentences) summarizing key spending patterns and overall potential for savings. Be encouraging.
@@ -208,33 +277,49 @@ export const getSavingsInsights = async (expenses: CategorizedExpense[]): Promis
     `;
 
     const response: GenerateContentResponse = await ai.models.generateContent({
-        model: GEMINI_TEXT_MODEL,
-        contents: prompt,
-        config: {
-            responseMimeType: "application/json",
-        }
+      model: GEMINI_TEXT_MODEL,
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+      },
     });
-    
-    const parsed = parseJsonFromGeminiResponse(response.text);
 
-    if (!parsed.insights || !Array.isArray(parsed.insights) || typeof parsed.overallSummary !== 'string') {
-        console.error("Invalid structure for savings insights from AI:", parsed);
-        throw new Error("AI returned an invalid or incomplete structure for savings insights.");
+    const parsed = parseJsonFromGeminiResponse(response.text ?? "");
+
+    if (
+      !parsed.insights ||
+      !Array.isArray(parsed.insights) ||
+      typeof parsed.overallSummary !== "string"
+    ) {
+      console.error("Invalid structure for savings insights from AI:", parsed);
+      throw new Error(
+        "AI returned an invalid or incomplete structure for savings insights."
+      );
     }
-    
-    const validatedInsights: SavingsInsightItem[] = parsed.insights.map((item: any) => {
-        const category = DEFAULT_CATEGORIES.includes(item.category as Category) ? item.category : 'Other';
+
+    const validatedInsights: SavingsInsightItem[] = parsed.insights
+      .map((item: any) => {
+        const category = DEFAULT_CATEGORIES.includes(item.category as Category)
+          ? item.category
+          : "Other";
         return {
-            category: category as Category,
-            observation: String(item.observation || "No specific observation provided."),
-            suggestion: String(item.suggestion || "No specific suggestion provided."),
-            potentialSaving: String(item.potentialSaving || "Not specified.")
+          category: category as Category,
+          observation: String(
+            item.observation || "No specific observation provided."
+          ),
+          suggestion: String(
+            item.suggestion || "No specific suggestion provided."
+          ),
+          potentialSaving: String(item.potentialSaving || "Not specified."),
         };
-    }).slice(0, 4); // Ensure we don't exceed a reasonable number of insights, e.g., max 4.
+      })
+      .slice(0, 4); // Ensure we don't exceed a reasonable number of insights, e.g., max 4.
 
     return {
       insights: validatedInsights,
-      overallSummary: String(parsed.overallSummary || "No overall summary provided by AI."),
+      overallSummary: String(
+        parsed.overallSummary || "No overall summary provided by AI."
+      ),
     };
   }, "Get Savings Insights");
 };
