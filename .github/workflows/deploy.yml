@@ -29,6 +29,11 @@ jobs:
         run: npm ci
       - name: Create .env.production file with API key
         run: |
+          if [ -z "${{ secrets.GEMINI_API_KEY }}" ]; then
+            echo "Error: GEMINI_API_KEY no está configurado en los secretos de GitHub."
+            echo "Por favor, configúralo en la configuración del repositorio en GitHub -> Settings -> Secrets and variables -> Actions -> New repository secret"
+            exit 1
+          fi
           echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" > .env.production
       - name: Build
         run: npm run build
