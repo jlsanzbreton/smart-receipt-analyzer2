@@ -15,7 +15,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  # Eliminamos el job build separado y lo combinamos con el de despliegue
+
+  # Un solo job para todo el proceso de build y despliegue
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -37,36 +40,27 @@ jobs:
           echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" > .env.production
       - name: Build
         run: npm run build
+      - name: Debug build output
+        run: |
+          echo "Contenido del directorio dist:"
+          ls -la ./dist
+      
+      # Despliegue directo a la rama gh-pages
+      - name: Deploy to GitHub Pages (gh-pages)
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: dist # La carpeta que contiene los archivos construidos
+          branch: gh-pages # La rama donde se despliega el sitio
+
+      # Configuración para GitHub Pages nativo
       - name: Setup Pages
         uses: actions/configure-pages@v3
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: "./dist"
-      - name: Debug build output
-        run: |
-          echo "Contenido del directorio dist:"
-          ls -la ./dist
-
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      # Checkout de nuevo para poder crear la rama gh-pages si es necesario
-      - name: Checkout
-        uses: actions/checkout@v3
-        
-      # Alternativa de despliegue usando JamesIves/github-pages-deploy-action
-      - name: Deploy to GitHub Pages (Alternative Method)
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          folder: dist # La carpeta que contiene los archivos construidos
-          branch: gh-pages # La rama donde se despliega el sitio
-          
-      # Si el paso anterior funciona, este puede ser redundante pero seguirá como respaldo
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v3
+        with:
+          token: ${{ github.token }}
