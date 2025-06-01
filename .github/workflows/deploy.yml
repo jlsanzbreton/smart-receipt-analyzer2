@@ -44,11 +44,11 @@ jobs:
 
       - name: Add .nojekyll file
         run: touch ./dist/.nojekyll
-        
+
       - name: Verificar archivos PWA
         run: |
           echo "Verificando archivos PWA generados..."
-          
+
           # Comprobar archivos esenciales de PWA
           for file in manifest.webmanifest sw.js; do
             if [ -f "./dist/$file" ]; then
@@ -57,7 +57,7 @@ jobs:
               echo "⚠️ $file no encontrado"
             fi
           done
-          
+
           # Verificar iconos SVG
           if [ -d "./dist/icons" ] || [ -d "./dist/assets/icons" ]; then
             echo "✅ Directorio de iconos encontrado"
@@ -75,7 +75,7 @@ jobs:
           ls -la ./dist
           echo "Tamaño del directorio dist:"
           du -sh ./dist
-      
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
