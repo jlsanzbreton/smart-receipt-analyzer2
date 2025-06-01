@@ -2,138 +2,84 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Smart Receipt Analyzer</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="manifest" href="/smart-receipt-analyzer2/manifest.json" />
+    <!-- Sólo un viewport -->
     <meta
-      name="theme-color"
-      content="#0D9488"
-      media="(prefers-color-scheme: light)"
+      name="viewport"
+      content="width=device-width,initial-scale=1.0,viewport-fit=cover"
     />
-    <meta
-      name="theme-color"
-      content="#0D9488"
-      media="(prefers-color-scheme: dark)"
-    />
-    <!-- Browser-specific theme color support -->
-    <meta name="msapplication-navbutton-color" content="#0D9488" />
+
+    <!-- PWA iOS -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="mobile-web-app-capable" content="yes" />
     <meta
       name="apple-mobile-web-app-status-bar-style"
       content="black-translucent"
     />
-    <meta name="apple-touch-fullscreen" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Receipt Analyzer" />
+
+    <!-- Iconos iOS -->
     <link
-      rel="mask-icon"
-      href="/smart-receipt-analyzer2/icons/icon-192x192.svg"
-      color="#0D9488"
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="%BASE_URL%icons/apple-touch-icon.png"
     />
     <link
       rel="apple-touch-icon"
-      href="/smart-receipt-analyzer2/icons/icon-192x192.svg"
+      sizes="152x152"
+      href="%BASE_URL%icons/apple-touch-icon-152x152.png"
     />
-    <!-- Splash screens para iPhone -->
     <link
-      rel="apple-touch-startup-image"
-      href="/smart-receipt-analyzer2/icons/icon-512x512.png"
+      rel="apple-touch-icon"
+      sizes="120x120"
+      href="%BASE_URL%icons/apple-touch-icon-120x120.png"
     />
-    <meta name="apple-touch-fullscreen" content="yes" />
-    <style>
-      body {
-        font-family: "Inter", sans-serif;
-      }
-      /* Custom scrollbar for better aesthetics */
-      ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-      }
-      ::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 10px;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #888;
-        border-radius: 10px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #555;
-      }
-    </style>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Mask icon Safari -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap"
-      rel="stylesheet"
+      rel="mask-icon"
+      href="%BASE_URL%icons/mask-icon.svg"
+      color="#10B981"
     />
-    <!-- Importmap polyfill for Safari on iOS < 16.4 -->
-    <script
-      async
-      src="https://ga.jspm.io/npm:es-module-shims@1.8.3/dist/es-module-shims.js"
-    ></script>
-    <script type="esms-importmap">
-      {
-        "imports": {
-          "react/": "https://esm.sh/react@^19.1.0/",
-          "react": "https://esm.sh/react@^19.1.0",
-          "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
-          "@heroicons/react/": "https://esm.sh/@heroicons/react@^2.2.0/",
-          "recharts": "https://esm.sh/recharts@^2.15.3",
-          "@google/genai": "https://esm.sh/@google/genai@^1.0.1",
-          "dexie": "https://esm.sh/dexie@^4.0.7"
-        }
-      }
-    </script>
+
+    <!-- Theme color for various browsers -->
+    <meta name="theme-color" content="#10B981" />
+    <meta name="msapplication-navbutton-color" content="#10B981" />
+    <meta name="msapplication-TileColor" content="#10B981" />
+    <meta name="color-scheme" content="light dark" />
+    <!-- Firefox OS -->
+    <meta
+      name="msapplication-TileImage"
+      content="%BASE_URL%icons/mstile-144x144.png"
+    />
+    <!-- Note: apple-mobile-web-app-status-bar-style is already defined above, but should have the same color -->
+
+    <title>Smart Receipt Analyzer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- FAVICONS -->
+    <link rel="icon" href="%BASE_URL%favicon.ico" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="%BASE_URL%favicon-32x32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="%BASE_URL%favicon-16x16.png"
+    />
+
+    <!-- Solo un manifest -->
+    <link rel="manifest" href="%BASE_URL%manifest.json" />
+
+    <!-- resto de imports y estilos… -->
   </head>
   <body class="bg-slate-100">
-    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <!-- Aquí React inyecta todo -->
     <div id="root"></div>
-    <script type="module" src="./index.tsx"></script>
-    <script>
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", async () => {
-          try {
-            // Adaptación para GitHub Pages
-            const swLocation =
-              window.location.hostname === "localhost"
-                ? "/sw.js"
-                : "/smart-receipt-analyzer2/sw.js";
 
-            console.log(
-              "Intentando registrar Service Worker en: " + swLocation
-            );
-
-            const registration = await navigator.serviceWorker.register(
-              swLocation
-            );
-            registration.onupdatefound = () => {
-              const installingWorker = registration.installing;
-              if (installingWorker == null) {
-                return;
-              }
-              installingWorker.onstatechange = () => {
-                if (installingWorker.state === "installed") {
-                  if (navigator.serviceWorker.controller) {
-                    console.log(
-                      "Nueva actualización disponible. Recarga para actualizar."
-                    );
-                  } else {
-                    console.log("Contenido almacenado para uso offline.");
-                  }
-                }
-              };
-            };
-
-            console.log(
-              "ServiceWorker registrado correctamente con scope: ",
-              registration.scope
-            );
-          } catch (error) {
-            console.error("Error al registrar el service worker:", error);
-          }
-        });
-      }
-    </script>
+    <!-- Punto de entrada de tu app -->
+    <script type="module" src="./src/main.tsx"></script>
   </body>
 </html>
